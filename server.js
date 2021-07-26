@@ -66,6 +66,14 @@ io.on("connection", (socket) => {
       event: broadcastEventTypes.ACTIVE_USERS,
       activeUsers: peers,
     });
+
+    groupCallRooms = groupCallRooms.filter(
+      (room) => room.socketId !== socket.id
+    );
+    io.sockets.emit("broadcast", {
+      event: broadcastEventTypes.GROUP_CALL_ROOMS,
+      groupCallRooms,
+    });
   });
 
   // listeners related with direct call
@@ -137,5 +145,24 @@ io.on("connection", (socket) => {
     });
 
     socket.join(data.roomId);
+  });
+
+  socket.on("group-call-user-left", (data) => {
+    socket.leave(data.roomId);
+
+    io.to(data.roomId).emit("group-call-user-left", {
+      streamId: data.streamId,
+    });
+  });
+
+  socket.on("group-call-closed-by-host", (data) => {
+    groupCallRooms = groupCallRooms.filter(
+      (room) => room.peerId !== data.peerId
+    );
+
+    io.sockets.emit("broadcast", {
+      event: broadcastEventTypes.GROUP_CALL_ROOMS,
+      groupCallRooms,
+    });
   });
 });

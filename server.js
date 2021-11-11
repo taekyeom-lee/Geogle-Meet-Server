@@ -1,11 +1,28 @@
+const twilio = require('twilio');
+const cors = require('cors');
 const express = require("express");
 const socket = require("socket.io");
 const { ExpressPeerServer } = require("peer");
 const groupCallHandler = require("./groupCallHandler");
 const { v4: uuidv4 } = require("uuid");
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 const app = express();
+
+app.use(cors())
+
+app.get('/', (req, res) => {
+  res.send({ api: 'video-talker-api'});
+})
+
+app.get('/api/get-turn-credentials', (req, res) => {
+  const accountSid = 'AC9f06dcc737cd2129f891645fbf33e2a0';
+  const authToken = '95ed74afc91d507ef09e4a40dcd4714a';
+  const client = twilio(accountSid, authToken);
+
+  client.tokens.create().then((token) => res.send({ token }));
+})
+
 
 const server = app.listen(PORT, () => {
   console.log(`server is listening on port ${PORT}`);
